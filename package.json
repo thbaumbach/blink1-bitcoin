@@ -1,8 +1,8 @@
 {
   "name": "blink1-bitcoin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A tiny tool to connect your blink(1) device with Bitcoin live trades using websockets.",
-  "main": "src/blink1-bitcoin.js",
+  "main": "src/",
   "scripts": {
     "test": "echo test"
   },
