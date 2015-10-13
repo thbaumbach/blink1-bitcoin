@@ -6,14 +6,13 @@ blink1-bitcoin connects you to the live trading API of your favorite Bitcoin exc
 
 ## Install
 
-Most OS need you to be root (e.g. using `sudo`) to install a global npm package
+Most OS need you to be root (e.g. using `sudo`) to install a global npm package:
 
 ```sh
-$ git clone https://github.com/thbaumbach/blink1-bitcoin && cd blink1-bitcoin
-$ npm -g install
+$ npm -g install blink1-bitcoin
 ```
 
-blink1-bitcoin depends on [Node.js](http://nodejs.org/) and [npm](http://npmjs.org/).
+blink1-bitcoin depends on [Node.js](http://nodejs.org/) and [npm](http://npmjs.org/). Tested with `node v4.2.0` and `npm v2.14.7`.
 
 ## Usage
 
