@@ -1,0 +1,70 @@
+#!/usr/bin/env node
+'use strict';
+
+//setup dependencies
+var Blink1 = require('node-blink1'),
+    Pusher = require('pusher-client');
+
+//connect to the first available device
+var blink1 = new Blink1();
+
+//connect to the Bitstamp websocket
+var socket = new Pusher('de504dc5763aeef9ff52');
+
+//subscribe to the live_trades channel
+var channel = socket.subscribe('live_trades');
+
+//bind the 'trade' event, this is where the magic happens
+channel.bind('trade',
+    function(data) {
+        var color = null;
+        //check the values and act accordingly
+        if (referenceData === null ) {
+            //first data, setup reference
+            color = colorWhite;
+            referenceData = data;
+            console.log(new Date().toUTCString() + ': reference is ' + data['price'].toFixed(2) + ' USD');
+        } else if (referenceData['price'] > data['price']) {
+            //trend down
+            color = colorRed;
+            console.log(new Date().toUTCString() + ': ' + data['amount'].toFixed(4) + ' BTC @ ' + data['price'].toFixed(2) + ' USD ('  + (data['price'] - referenceData['price']).toFixed(2) + ' USD)');
+        } else if (referenceData['price'] < data['price']) {
+            //trend up
+            color = colorGreen;
+            console.log(new Date().toUTCString() + ': ' + data['amount'].toFixed(4) + ' BTC @ ' + data['price'].toFixed(2) + ' USD (+' + (data['price'] - referenceData['price']).toFixed(2) + ' USD)');
+        } else {
+            //trend sideways
+            color = colorWhite;
+            console.log(new Date().toUTCString() + ': ' + data['amount'].toFixed(4) + ' BTC @ ' + data['price'].toFixed(2) + ' USD');
+        }
+        blink1.fadeToRGB(300, color.r, color.g, color.b, fadeOut);
+    }
+);
+
+//set the reference and color variables/"constants"
+var referenceData = null,
+    colorRed = { r:255, g:0, b:0 },
+    colorGreen = { r:0, g:255, b:0 },
+    colorWhite = { r:255, g:255, b:255 };
+
+//calm down function
+function fadeOut() {
+    blink1.fadeToRGB(900, 0, 0, 0);
+}
+
+//do some cleanup when the app is closing or ctrl+c event or uncaught exceptions
+function exitHandler(options, err) {
+    if (err) console.log(err.stack);
+    if (options.exit) {
+        //force exit
+        process.exit();
+    } else {
+        //cleanup
+        blink1.off();
+        blink1.close();
+    }
+}
+
+process.on('exit', exitHandler.bind(null, {exit:false}));
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));

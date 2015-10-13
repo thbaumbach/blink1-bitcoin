@@ -1,0 +1,32 @@
+{
+  "name": "blink1-bitcoin",
+  "version": "0.1.0",
+  "description": "A tiny tool to connect your blink(1) device with Bitcoin live trades using websockets.",
+  "main": "src/blink1-bitcoin.js",
+  "scripts": {
+    "test": "echo test"
+  },
+  "bin": {
+    "blink1-bitcoin": "bin/blink1-bitcoin"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/thbaumbach/blink1-bitcoin"
+  },
+  "dependencies": {
+    "node-hid": "^0.4.0",
+    "node-blink1": "^0.2.1",
+    "pusher-client": "^0.2.3"
+  },
+  "keywords": [
+    "blink1",
+    "blink(1)",
+    "blink",
+    "bitcoin",
+    "live",
+    "trade",
+    "websocket"
+  ],
+  "author": "Thomas Baumbach <tom@xolo.pw>",
+  "license": "MIT"
+}
