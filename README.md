@@ -2,7 +2,7 @@
 
 > A tiny tool to connect your blink(1) device with Bitcoin live trades using websockets.
 
-blink1-bitcoin connects you to the live trading API of your favorite Bitcoin exchange (currently Bitstamp, see `Todo`) and uses your blink(1) device to flash on every occuring trade with a corresponding light. The first incoming trade sets the reference values.
+blink1-bitcoin connects you to the live trading API of your favorite Bitcoin exchange (currently Bitstamp and OKCoin only, see `Todo`) and uses your blink(1) device to flash on every occuring trade with a corresponding light. The first incoming trade sets the reference values.
 
 ## Install
 
@@ -28,12 +28,12 @@ or
 $ blink1-bitcoin okcoin
 ```
 
-`bitfinex` and `Houbi` are coming soon
+`Bitfinex` and `Huobi` are coming soon
 
 ## Todo
 
 * transfer code into library!!
-* options to connect to: Bitfinex, Kraken, BTC-e, Houbi...
+* options to connect to: Bitfinex, Kraken, BTC-e, Huobi...
 
 ## License
 
