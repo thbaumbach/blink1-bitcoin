@@ -3,43 +3,104 @@
 
 //setup dependencies
 var Blink1 = require('node-blink1'),
-    Pusher = require('pusher-client');
+    Pusher = require('pusher-client'),
+    WebSocket = require('ws');
+
+//predefined configurations
+var availableConfig = {
+        bitstamp : {
+            type : 'pusher',
+            pusherID : 'de504dc5763aeef9ff52',
+            pusherChannel : 'live_trades',
+            pusherEvent : 'trade',
+            currency : 'USD',
+            parseData : function(data) { return { amount : data.amount, price : data.price }; }
+        },
+        okcoin : {
+            type : 'websocket',
+            url : 'wss://real.okcoin.cn:10440/websocket/okcoinapi',
+            subscribeMsg : '{"event":"addChannel","channel":"ok_btccny_ticker"}',
+            currency : 'CNY',
+            parseData : function(data) { return { amount : null, price : parseFloat(data[0]['data'].last) }; }
+        },
+        huobi : {
+            type : 'websocket',
+            url : 'http://hq.huobi.com:80',
+            subscribeMsg : '{"symbolList":'+'{"tradeDetail":[{"symbolId":"btccny","pushType":"pushLong"}]}'+',"version":1,"msgType":"reqMsgSubscribe","requestIndex":'+Date.now()+'}',
+            currency : 'CNY',
+            parseData : function(data) { return null; }
+        },
+        bitfinex : {
+            type : 'websocket',
+            url : 'wss://api2.bitfinex.com:3000/ws',
+            subscribeMsg : '{"event":"subscribe","channel":"trades","pair":"BTCUSD"}',
+            currency : 'USD',
+            parseData : function(data) { return null; }
+        }
+    },
+    usedExchange = process.argv[process.argv.length-1],
+    usedConfig = availableConfig[usedExchange];
+
+if (!usedConfig)
+    throw new Error('no or wrong exchange name given');
 
 //connect to the first available device
 var blink1 = new Blink1();
 
-//connect to the Bitstamp websocket
-var socket = new Pusher('de504dc5763aeef9ff52');
+//connect to the chosen websocket and setup the socket accordingly
+var socket = null;
+if (usedConfig.type === 'pusher') {
+    //subscribe to the live_trades channel
+    socket = new Pusher(usedConfig.pusherID);
+    var channel = socket.subscribe(usedConfig.pusherChannel);
+    channel.bind(usedConfig.pusherEvent, handleData);
+} else if (usedConfig.type === 'websocket') {
+    var socket = new WebSocket(usedConfig.url, {
+        rejectUnauthorized : false
+    });
+    socket.on('open', function() {
+        socket.send(usedConfig.subscribeMsg);
+    });
+    socket.on('message', function(data, flags) {
+        handleData(data);
+    });
+    socket.on('error', function(error) {
+        console.log('connection error: ' + error.toString());
+    });
+} else {
+    throw new Error('unknown socket type');
+}
 
-//subscribe to the live_trades channel
-var channel = socket.subscribe('live_trades');
-
-//bind the 'trade' event, this is where the magic happens
-channel.bind('trade',
-    function(data) {
-        var color = null;
-        //check the values and act accordingly
-        if (referenceData === null ) {
-            //first data, setup reference
-            color = colorWhite;
-            referenceData = data;
-            console.log(new Date().toUTCString() + ': reference is ' + data['price'].toFixed(2) + ' USD');
-        } else if (referenceData['price'] > data['price']) {
-            //trend down
-            color = colorRed;
-            console.log(new Date().toUTCString() + ': ' + data['amount'].toFixed(4) + ' BTC @ ' + data['price'].toFixed(2) + ' USD ('  + (data['price'] - referenceData['price']).toFixed(2) + ' USD)');
-        } else if (referenceData['price'] < data['price']) {
-            //trend up
-            color = colorGreen;
-            console.log(new Date().toUTCString() + ': ' + data['amount'].toFixed(4) + ' BTC @ ' + data['price'].toFixed(2) + ' USD (+' + (data['price'] - referenceData['price']).toFixed(2) + ' USD)');
-        } else {
-            //trend sideways
-            color = colorWhite;
-            console.log(new Date().toUTCString() + ': ' + data['amount'].toFixed(4) + ' BTC @ ' + data['price'].toFixed(2) + ' USD');
-        }
-        blink1.fadeToRGB(300, color.r, color.g, color.b, fadeOut);
+//this is where the magic happens, hendle the incoming data
+function handleData(data) {
+    //console.log('Received: "' + (typeof data === 'string' ? data : JSON.stringify(data)) + '"'); //DEBUG
+    var newData = usedConfig.parseData(typeof data === 'string' ? JSON.parse(data) : data),
+        color = null;
+    if (newData === null) {
+        console.log(new Date().toString() + ': crippled data received :(');
+        return;
     }
-);
+    //check the values and act accordingly
+    if (referenceData === null ) {
+        //first data, setup reference
+        color = colorWhite;
+        referenceData = newData;
+        console.log(new Date().toString() + ': reference is ' + newData.price.toFixed(2) + ' ' + usedConfig.currency);
+    } else if (referenceData.price > newData.price) {
+        //trend down
+        color = colorRed;
+        console.log(new Date().toString() + ': ' + (newData.amount ? (newData.amount.toFixed(4) + ' BTC @ ') : '') + newData.price.toFixed(2) + ' ' + usedConfig.currency + ' ('  + (newData.price - referenceData.price).toFixed(2) + ' ' + usedConfig.currency + ')');
+    } else if (referenceData.price < newData.price) {
+        //trend up
+        color = colorGreen;
+        console.log(new Date().toString() + ': ' + (newData.amount ? (newData.amount.toFixed(4) + ' BTC @ ') : '') + newData.price.toFixed(2) + ' ' + usedConfig.currency + ' (+' + (newData.price - referenceData.price).toFixed(2) + ' ' + usedConfig.currency + ')');
+    } else {
+        //trend sideways
+        color = colorWhite;
+        console.log(new Date().toString() + ': ' + (newData.amount ? (newData.amount.toFixed(4) + ' BTC @ ') : '') + newData.price.toFixed(2) + ' ' + usedConfig.currency + '');
+    }
+    blink1.fadeToRGB(300, color.r, color.g, color.b, fadeOut);
+}
 
 //set the reference and color variables/"constants"
 var referenceData = null,

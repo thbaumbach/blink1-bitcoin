@@ -19,13 +19,21 @@ blink1-bitcoin depends on [Node.js](http://nodejs.org/) and [npm](http://npmjs.o
 Hook up your blink(1) device and run:
 
 ```sh
-$ blink1-bitcoin
+$ blink1-bitcoin bitstamp
 ```
+
+or
+
+```sh
+$ blink1-bitcoin okcoin
+```
+
+`bitfinex` and `Houbi` are coming soon
 
 ## Todo
 
-* transfer code into library
-* options to connect to: Bitfinex, Kraken, BTC-e, OKCoin, Houbi...
+* transfer code into library!!
+* options to connect to: Bitfinex, Kraken, BTC-e, Houbi...
 
 ## License
 
