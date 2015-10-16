@@ -19,21 +19,27 @@ blink1-bitcoin depends on [Node.js](http://nodejs.org/) and [npm](http://npmjs.o
 Hook up your blink(1) device and run:
 
 ```sh
-$ blink1-bitcoin bitstamp
+$ blink1-bitcoin <exchange>
 ```
 
-or
+Currently supported exchanges:
+* `bitstamp`: showing BTC-USD trades on Bitstamp
+* `okcoin`: showing BTC-CNY trades on OKCoin (*connection seems to be a bit sluggish sometimes*)
 
-```sh
-$ blink1-bitcoin okcoin
-```
-
-`Bitfinex` and `Huobi` are coming soon
+`Bitfinex` and `Huobi` are coming soon.
 
 ## Todo
 
 * transfer code into library!!
 * options to connect to: Bitfinex, Kraken, BTC-e, Huobi...
+
+## Support
+
+Found a bug? Open an issue [here](https://github.com/thbaumbach/blink1-bitcoin/issues) on Github.
+
+Wanna help? Submit a pull request or contact me.
+
+Wanna tip me a beer? Use [Bitcoin](bitcoin:14pSD9AmuNhLDbGRXehxbhwzRSRrkpiAKg).
 
 ## License
 

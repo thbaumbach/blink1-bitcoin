@@ -38,11 +38,17 @@ var availableConfig = {
             parseData : function(data) { return null; }
         }
     },
+    usableConfig = [ 'bitstamp' , 'okcoin' ],
     usedExchange = process.argv[process.argv.length-1],
     usedConfig = availableConfig[usedExchange];
 
-if (!usedConfig)
-    throw new Error('no or wrong exchange name given');
+if (!usedConfig) {
+    console.log('usage: blink1-bitcoin <exchange>\n\nexchanges:');
+    for (var num in usableConfig)
+        console.log('\t' + usableConfig[num]);
+    console.log();
+    return -1;
+}
 
 //connect to the first available device
 var blink1 = new Blink1();
@@ -50,15 +56,18 @@ var blink1 = new Blink1();
 //connect to the chosen websocket and setup the socket accordingly
 var socket = null;
 if (usedConfig.type === 'pusher') {
-    //subscribe to the live_trades channel
+    //connect to the API and subscribe to the live_trades channel
     socket = new Pusher(usedConfig.pusherID);
     var channel = socket.subscribe(usedConfig.pusherChannel);
     channel.bind(usedConfig.pusherEvent, handleData);
+    console.log('connected to "' + usedExchange + '"');
 } else if (usedConfig.type === 'websocket') {
     var socket = new WebSocket(usedConfig.url, {
         rejectUnauthorized : false
     });
     socket.on('open', function() {
+        console.log('connected to "' + usedExchange + '"');
+        //subscribe to the live_trades channel
         socket.send(usedConfig.subscribeMsg);
     });
     socket.on('message', function(data, flags) {
@@ -80,26 +89,40 @@ function handleData(data) {
         console.log(new Date().toString() + ': crippled data received :(');
         return;
     }
+    //print the command-line information
+    printTicker(referenceData, newData);
     //check the values and act accordingly
     if (referenceData === null ) {
         //first data, setup reference
         color = colorWhite;
         referenceData = newData;
-        console.log(new Date().toString() + ': reference is ' + newData.price.toFixed(2) + ' ' + usedConfig.currency);
     } else if (referenceData.price > newData.price) {
         //trend down
         color = colorRed;
-        console.log(new Date().toString() + ': ' + (newData.amount ? (newData.amount.toFixed(4) + ' BTC @ ') : '') + newData.price.toFixed(2) + ' ' + usedConfig.currency + ' ('  + (newData.price - referenceData.price).toFixed(2) + ' ' + usedConfig.currency + ')');
     } else if (referenceData.price < newData.price) {
         //trend up
         color = colorGreen;
-        console.log(new Date().toString() + ': ' + (newData.amount ? (newData.amount.toFixed(4) + ' BTC @ ') : '') + newData.price.toFixed(2) + ' ' + usedConfig.currency + ' (+' + (newData.price - referenceData.price).toFixed(2) + ' ' + usedConfig.currency + ')');
     } else {
         //trend sideways
         color = colorWhite;
-        console.log(new Date().toString() + ': ' + (newData.amount ? (newData.amount.toFixed(4) + ' BTC @ ') : '') + newData.price.toFixed(2) + ' ' + usedConfig.currency + '');
     }
     blink1.fadeToRGB(300, color.r, color.g, color.b, fadeOut);
+}
+
+//use a nice ticker format
+function printTicker(referenceData, newData) {
+    var now = new Date(),
+        timestamp = now.getFullYear() + '-' + pZ(now.getMonth()+1) + '-' + pZ(now.getDate()) + ' ' + pZ(now.getHours()) + ':' + pZ(now.getMinutes()) + ':' + pZ(now.getSeconds());
+    if (referenceData === null) {
+        console.log(timestamp + ': the reference value is ' + newData.price.toFixed(2) + ' ' + usedConfig.currency);
+    } else {
+        console.log(timestamp + ': ' + (newData.amount ? (newData.amount.toFixed(4) + ' BTC @ ') : '') + newData.price.toFixed(2) + ' ' + usedConfig.currency + ' (' + (newData.price >= referenceData.price ? '+' : '') + (newData.price - referenceData.price).toFixed(2) + ' ' + usedConfig.currency + ')');
+    }
+}
+
+//prepend zero to values < 10
+function pZ(value) {
+    return (value < 10 ? '0' : '') + value;
 }
 
 //set the reference and color variables/"constants"
