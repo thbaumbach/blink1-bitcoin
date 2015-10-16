@@ -3,6 +3,7 @@
   "version": "0.1.4",
   "description": "A tiny tool to connect your blink(1) device with Bitcoin live trades using websockets.",
   "homepage": "https://github.com/thbaumbach/blink1-bitcoin",
+  "readmeFilename": "README.md",
   "main": "src/",
   "scripts": {
     "test": "echo test"
