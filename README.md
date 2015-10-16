@@ -39,7 +39,7 @@ Found a bug? Open an issue [here](https://github.com/thbaumbach/blink1-bitcoin/i
 
 Wanna help? Submit a pull request or contact me.
 
-Wanna tip me a beer? Use [Bitcoin](bitcoin:14pSD9AmuNhLDbGRXehxbhwzRSRrkpiAKg).
+Wanna tip me a beer? Use [Bitcoin](bitcoin:14pSD9AmuNhLDbGRXehxbhwzRSRrkpiAKg): 14pSD9AmuNhLDbGRXehxbhwzRSRrkpiAKg
 
 ## License
 
