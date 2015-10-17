@@ -4,7 +4,8 @@
 //setup dependencies
 var Blink1 = require('node-blink1'),
     Pusher = require('pusher-client'),
-    WebSocket = require('ws');
+    WebSocket = require('ws'),
+    SocketIO = require('socket.io-client');
 
 //predefined configurations
 var availableConfig = {
@@ -24,9 +25,9 @@ var availableConfig = {
             parseData : function(data) { return { amount : null, price : parseFloat(data[0]['data'].last) }; }
         },
         huobi : {
-            type : 'websocket',
-            url : 'http://hq.huobi.com:80',
-            subscribeMsg : '{"symbolList":'+'{"tradeDetail":[{"symbolId":"btccny","pushType":"pushLong"}]}'+',"version":1,"msgType":"reqMsgSubscribe","requestIndex":'+Date.now()+'}',
+            type : 'socketio',
+            url : 'hq.huobi.com:80',
+            subscribeMsg : {symbolList:{tradeDetail:[{symbolId:"btccny",pushType:"pushLong"}]},version:1,msgType:"reqMsgSubscribe",requestIndex:Date.now()},
             currency : 'CNY',
             parseData : function(data) { return null; }
         },
@@ -35,10 +36,10 @@ var availableConfig = {
             url : 'wss://api2.bitfinex.com:3000/ws',
             subscribeMsg : '{"event":"subscribe","channel":"trades","pair":"BTCUSD"}',
             currency : 'USD',
-            parseData : function(data) { return null; }
+            parseData : function(data) { return (data.length === 5) ? { amount : null, price : data[3] } : null; }
         }
     },
-    usableConfig = [ 'bitstamp' , 'okcoin' ],
+    usableConfig = [ 'bitstamp' , 'okcoin', 'bitfinex' ],
     usedExchange = process.argv[process.argv.length-1],
     usedConfig = availableConfig[usedExchange];
 
@@ -53,7 +54,7 @@ if (!usedConfig) {
 //connect to the first available device
 var blink1 = new Blink1();
 
-//connect to the chosen websocket and setup the socket accordingly
+//connect to the chosen exchange and setup the socket accordingly
 var socket = null;
 if (usedConfig.type === 'pusher') {
     //connect to the API and subscribe to the live_trades channel
@@ -76,6 +77,29 @@ if (usedConfig.type === 'pusher') {
     socket.on('error', function(error) {
         console.log('connection error: ' + error.toString());
     });
+} else if (usedConfig.type === 'socketio') {
+    console.log("test")
+    var socket = SocketIO.connect(usedConfig.url, {'force new connection': true, reconnection: true});
+    socket.on('connect', function() {
+        console.log('connected to "' + usedExchange + '"');
+        //subscribe to the live_trades channel
+        socket.emit('request', usedConfig.subscribeMsg);
+    });
+    socket.on('message', function(data) {
+        handleData(data);
+    });
+    socket.on('error', function(error) {
+        console.log('connection error: ' + error.toString());
+    });
+    socket.on('disconnect', function(){
+        console.log('websocket client disconnect from push server:' + socket.socket.sessionid);
+    });
+    socket.on('reconnect', function(){
+        console.log('websocket client reconnect from push server:' + socket.socket.sessionid);
+    });
+    socket.on('request', function(data) {
+        console.log('request:', JSON.stringify(data));
+    });
 } else {
     throw new Error('unknown socket type');
 }
@@ -86,7 +110,7 @@ function handleData(data) {
     var newData = usedConfig.parseData(typeof data === 'string' ? JSON.parse(data) : data),
         color = null;
     if (newData === null) {
-        console.log(new Date().toString() + ': crippled data received :(');
+        //console.log(new Date().toString() + ': crippled data received :('); //DEBUG
         return;
     }
     //print the command-line information
