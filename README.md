@@ -24,7 +24,7 @@ $ blink1-bitcoin <exchange>
 
 Currently supported exchanges:
 * `bitstamp`: showing BTC-USD trades on Bitstamp
-* `okcoin`: showing BTC-CNY trades on OKCoin (*connection seems to be a bit sluggish sometimes*)
+* `okcoin`: showing BTC-CNY trades on OKCoin (*connection is sluggish sometimes*)
 * `bitfinex`: showing BTC-USD trades on Bitfinex
 
 `Huobi` is currently work-in-progress.
